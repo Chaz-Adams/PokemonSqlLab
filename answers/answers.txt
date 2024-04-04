@@ -60,7 +60,7 @@ GROUP BY t.id;
 SELECT pt.trainerID, COUNT(*) AS num_pokemon_level_100
 FROM pokemon_trainer pt
 JOIN pokemons p ON pt.pokemon_id = p.id
-WHERE pt.pokelevel = 100
+WHERE pt.pokelevel >= 100
 GROUP BY pt.trainerID
 HAVING COUNT(*) >= 1;
 
@@ -68,14 +68,32 @@ HAVING COUNT(*) >= 1;
 
 --How many pokemon only belong to one trainer and no other?
 SELECT COUNT(*) AS num_pokemon_only_one_trainer
-FROM (
-    SELECT
-        pokemon_id,
-        COUNT(trainerID) AS num_trainers
-    FROM
-        pokemon_trainer
-    GROUP BY
-        pokemon_id
-    HAVING
-        num_trainers = 1
+FROM
+(   SELECT pokemon_id, COUNT(trainerID) AS num_trainers
+    FROM pokemon_trainer
+    GROUP BY pokemon_id
+    HAVING num_trainers = 1
 ) AS single_trainer_pokemon;
+
+
+------- FINAL PART ------
+
+
+ SELECT p.name AS PokemonName,
+        tr.trainername AS TrainerName,
+        t.pokelevel AS CurrentLevel,
+        ty.name AS PrimaryType,
+        typ.name AS SecondaryType
+ FROM pokemons p
+ INNER JOIN pokemon_trainer t ON p.id = t.pokemon_id
+ JOIN trainers tr ON t.trainerID = tr.trainerID
+ LEFT JOIN types ty ON p.primary_type = ty.id
+ LEFT JOIN types typ ON p.secondary_type = typ.id
+ ORDER BY
+    (SELECT COUNT(*)
+    FROM pokemon_trainer t2
+    WHERE t2.trainerID = tr.trainerID
+    AND t2.pokelevel >= 100)
+DESC;
+
+
